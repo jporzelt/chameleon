@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Publish Report
-        uses: turing85/publish-report@v1.0.11
+        uses: turing85/publish-report@v2
         with:
           checkout: 'true'
           recreate-comment: true
@@ -66,15 +66,24 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 21
           distribution: 'temurin'
           cache: 'gradle'
 
       - name: Build and Test
         run: ./gradlew --no-daemon build
+
+      - name: Upload Classes
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: classes
+          path: '**/build/classes/**/*.class'
+          if-no-files-found: error
+          retention-days: 2
 
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
@@ -105,7 +114,7 @@ jobs:
 
       - name: Publish Report
         if: ${{ always() }}
-        uses: turing85/publish-report@v1.0.11
+        uses: turing85/publish-report@v2
         with:
           report-name: JUnit Test
           report-path: '**/build/test-results/test/TEST*.xml'
@@ -122,15 +131,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download classes
+        uses: actions/download-artifact@v4
+        with:
+          name: classes
+
       - name: Download Coverage Report
         uses: actions/download-artifact@v4
         with:
           name: code-coverage-report
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 21
           distribution: 'temurin'
           cache: 'gradle'
 
@@ -141,11 +155,11 @@ jobs:
         run: |
           ./gradlew \
             --no-daemon \
-            -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=chehl \
-            -Dsonar.projectKey=chehl_chameleon \
-            -Dsonar.login=${SONAR_TOKEN} \
+            --system-prop sonar.sourceEncoding=UTF-8 \
+            --system-prop sonar.host.url=https://sonarcloud.io \
+            --system-prop sonar.organization=chehl \
+            --system-prop sonar.projectKey=chehl_chameleon \
+            --system-prop sonar.token=${SONAR_TOKEN} \
             sonar
 
   owasp:
@@ -159,7 +173,7 @@ jobs:
       - name: Git checkout
         uses: actions/checkout@v4
 
-      - name: OWAS Dependency check
+      - name: OWASP Dependency check
         uses: ./.github/actions/owasp
 
   integration-tests:

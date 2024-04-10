@@ -7,16 +7,26 @@ runs:
   using: composite
 
   steps:
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
       with:
-        java-version: 17
+        java-version: 21
         distribution: 'temurin'
         cache: 'gradle'
 
+    - name: Download OWASP DB Cache
+      uses: actions/cache@v4
+      with:
+        path: owasp-db
+        key: owasp-db
+
     - name: OWASP CVE Check
       shell: bash
-      run: ./gradlew --no-daemon dependencyCheckAnalyze
+      run: |
+        ./gradlew \
+          --no-daemon \
+          --system-prop dataDirectory=owasp-db \
+          dependencyCheckAnalyze
 
     - name: Upload OWASP Report
       uses: actions/upload-artifact@v4
@@ -27,9 +37,16 @@ runs:
         if-no-files-found: error
         retention-days: 2
 
+    - name: Update OWASP DB Cache
+      uses: actions/cache/save@v4
+      if: ${{ always() }}
+      with:
+        path: owasp-db
+        key: owasp-db
+
     - name: Publish Report
       if: ${{ always() }}
-      uses: turing85/publish-report@v1.0.3
+      uses: turing85/publish-report@v2
       with:
         report-name: OWASP
         report-path: '**/build/reports/owasp/*-junit.xml'
