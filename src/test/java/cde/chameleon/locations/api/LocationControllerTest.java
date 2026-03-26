@@ -247,10 +247,10 @@ class LocationControllerTest {
 
     private void assertResponseStatus(String method, Class<? extends Exception> exception, HttpStatus expectedHttpStatus) {
         try {
-            Truth.assertThat(LocationController.class.getDeclaredMethod(method, exception)
-                            .getAnnotation(ResponseStatus.class).value())
-                    .isEqualTo(expectedHttpStatus);
-        } catch (NoSuchMethodException e) {
+            ResponseStatus responseStatus = LocationController.class.getDeclaredMethod(method, exception).getAnnotation(ResponseStatus.class);
+            Truth.assertThat(responseStatus).isNotNull();
+            Truth.assertThat(responseStatus.value()).isEqualTo(expectedHttpStatus);
+        } catch (NoSuchMethodException _) {
             Assertions.fail();
         }
     }
@@ -285,7 +285,7 @@ class LocationControllerTest {
 
         // then
         assertResponseStatus("handleNameNotUniqueLocationException", NameNotUniqueLocationException.class,
-                HttpStatus.UNPROCESSABLE_ENTITY);
+                HttpStatus.UNPROCESSABLE_CONTENT);
         Truth.assertThat(apiErrorDto).isNotNull();
         Truth.assertThat(apiErrorDto.getMessage()).contains(expectedId.toString());
         Truth.assertThat(apiErrorDto.getMessage()).contains(expectedName);

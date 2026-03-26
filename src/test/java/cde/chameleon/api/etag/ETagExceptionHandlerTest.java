@@ -14,10 +14,10 @@ class ETagExceptionHandlerTest {
 
     private void assertResponseStatus(String method, Class<? extends Exception> exception, HttpStatus expectedHttpStatus) {
         try {
-            Truth.assertThat(ETagExceptionHandler.class.getDeclaredMethod(method, exception)
-                            .getAnnotation(ResponseStatus.class).value())
-                    .isEqualTo(expectedHttpStatus);
-        } catch (NoSuchMethodException e) {
+            ResponseStatus responseStatus = ETagExceptionHandler.class.getDeclaredMethod(method, exception).getAnnotation(ResponseStatus.class);
+            Truth.assertThat(responseStatus).isNotNull();
+            Truth.assertThat(responseStatus.value()).isEqualTo(expectedHttpStatus);
+        } catch (NoSuchMethodException _) {
             Assertions.fail();
         }
     }

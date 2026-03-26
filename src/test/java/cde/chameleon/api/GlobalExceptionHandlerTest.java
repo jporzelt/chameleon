@@ -22,10 +22,10 @@ class GlobalExceptionHandlerTest {
 
     private void assertResponseStatus(String method, Class<? extends Exception> exception, HttpStatus expectedHttpStatus) {
         try {
-            Truth.assertThat(GlobalExceptionHandler.class.getDeclaredMethod(method, exception)
-                            .getAnnotation(ResponseStatus.class).value())
-                    .isEqualTo(expectedHttpStatus);
-        } catch (NoSuchMethodException e) {
+            ResponseStatus responseStatus = GlobalExceptionHandler.class.getDeclaredMethod(method, exception).getAnnotation(ResponseStatus.class);
+            Truth.assertThat(responseStatus).isNotNull();
+            Truth.assertThat(responseStatus.value()).isEqualTo(expectedHttpStatus);
+        } catch (NoSuchMethodException _) {
             Assertions.fail();
         }
     }
@@ -72,7 +72,7 @@ class GlobalExceptionHandlerTest {
         // then
         Truth.assertThat(apiErrorDto).isNotNull();
         Truth.assertThat(apiErrorDto.getMessage()).isEqualTo("Invalid data");
-        assertResponseStatus("handleConstraintViolation", ConstraintViolationException.class, HttpStatus.UNPROCESSABLE_ENTITY);
+        assertResponseStatus("handleConstraintViolation", ConstraintViolationException.class, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
@@ -88,7 +88,7 @@ class GlobalExceptionHandlerTest {
         // then
         Truth.assertThat(apiErrorDto).isNotNull();
         Truth.assertThat(apiErrorDto.getMessage()).isEqualTo("Invalid data");
-        assertResponseStatus("handleMethodArgumentNotValidException", MethodArgumentNotValidException.class, HttpStatus.UNPROCESSABLE_ENTITY);
+        assertResponseStatus("handleMethodArgumentNotValidException", MethodArgumentNotValidException.class, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Test
